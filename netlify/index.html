@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>California House Price Predictor</title>
+<style>
+  :root { color-scheme: dark; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    background: radial-gradient(1200px 600px at 20% -10%, #1d3a5f 0%, #0b1526 55%, #070d18 100%);
+    color: #eaf0fa; min-height: 100vh; padding: 32px 16px;
+  }
+  .wrap { max-width: 920px; margin: 0 auto; }
+  header { text-align: center; margin-bottom: 28px; }
+  header h1 { font-size: 2rem; letter-spacing: .5px; }
+  header h1 span { color: #7cc4ff; }
+  header p { color: #9fb2cc; margin-top: 8px; }
+  .price-card {
+    background: linear-gradient(135deg, #12325e, #0d2242);
+    border: 1px solid #2b4d7d; border-radius: 18px;
+    text-align: center; padding: 28px 16px; margin-bottom: 28px;
+    box-shadow: 0 12px 40px rgba(0,0,0,.45);
+  }
+  .price-card .label { color: #9fb2cc; font-size: .9rem; text-transform: uppercase; letter-spacing: 2px; }
+  .price-card .value { font-size: 3rem; font-weight: 800; color: #7cc4ff; margin: 8px 0 4px; }
+  .price-card .sub { color: #8fa3c0; font-size: .85rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 14px; }
+  .slider-card {
+    background: rgba(255,255,255,.04); border: 1px solid #22395c;
+    border-radius: 14px; padding: 14px 16px;
+  }
+  .slider-card .row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+  .slider-card label { font-size: .9rem; color: #cdd9ec; }
+  .slider-card output { font-weight: 700; color: #7cc4ff; font-variant-numeric: tabular-nums; }
+  input[type=range] { width: 100%; accent-color: #4da3ff; cursor: pointer; }
+  .info {
+    margin-top: 28px; background: rgba(255,255,255,.03); border: 1px solid #22395c;
+    border-radius: 14px; padding: 18px; color: #9fb2cc; font-size: .9rem; line-height: 1.6;
+  }
+  .info b { color: #dbe6f7; }
+  .loading { text-align: center; color: #9fb2cc; padding: 60px 0; }
+  footer { text-align: center; color: #5c6f8c; font-size: .8rem; margin-top: 24px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>🏠 California House <span>Price Predictor</span></h1>
+    <p>Move the sliders — a Ridge regression model trained on 16,512 California districts predicts live, right in your browser.</p>
+  </header>
+
+  <div class="price-card">
+    <div class="label">Predicted median house value</div>
+    <div class="value" id="price">—</div>
+    <div class="sub" id="modelInfo">loading model…</div>
+  </div>
+
+  <div class="grid" id="sliders"><div class="loading">Loading model…</div></div>
+
+  <div class="info" id="about" style="display:none">
+    <b>How it works:</b> the Python model (Ridge regression) was exported as plain numbers —
+    feature means, scales, coefficients. This page standardizes your inputs the same way
+    (<i>z = (x − mean) / scale</i>) and computes <i>price = intercept + Σ coef·z</i> in JavaScript.
+    No server needed — that's why it runs on Netlify.<br><br>
+    <b>Model scores</b> (4,128 unseen districts): <span id="metrics"></span>
+  </div>
+
+  <footer>Ridge regression · scikit-learn · Deployed as a static site on Netlify</footer>
+</div>
+
+<script>
+let M = null;
+const state = {};
+
+function predict() {
+  let y = M.intercept;
+  M.feature_names.forEach((f, i) => {
+    const z = (state[f] - M.scaler_mean[i]) / M.scaler_scale[i];
+    y += M.coef[i] * z;
+  });
+  const dollars = Math.max(0, y * M.target_unit);
+  document.getElementById("price").textContent =
+    "$" + Math.round(dollars).toLocaleString("en-US");
+}
+
+function fmt(f, v) {
+  if (["Latitude", "Longitude"].includes(f)) return v.toFixed(2);
+  if (["MedInc", "AveRooms", "AveBedrms", "AveOccup"].includes(f)) return v.toFixed(2);
+  if (f === "HouseAge") return Math.round(v);
+  return Math.round(v).toLocaleString("en-US");
+}
+
+fetch("model.json")
+  .then(r => r.json())
+  .then(model => {
+    M = model;
+    const box = document.getElementById("sliders");
+    box.innerHTML = "";
+    M.feature_names.forEach(f => {
+      const [lo, hi] = M.ranges[f];
+      const def = M.defaults[f];
+      state[f] = def;
+      const card = document.createElement("div");
+      card.className = "slider-card";
+      card.innerHTML =
+        `<div class="row"><label>${M.feature_labels[f]}</label><output id="o-${f}"></output></div>` +
+        `<input type="range" id="s-${f}" min="${lo}" max="${hi}" step="any" value="${def}">`;
+      box.appendChild(card);
+      const slider = card.querySelector("input");
+      const out = card.querySelector("output");
+      const sync = () => { state[f] = parseFloat(slider.value); out.textContent = fmt(f, state[f]); predict(); };
+      slider.addEventListener("input", sync);
+      sync();
+    });
+    document.getElementById("modelInfo").textContent =
+      `Ridge regression · R² ${M.metrics.r2} · MAE $${Math.round(M.metrics.mae * 100000).toLocaleString()}`;
+    document.getElementById("metrics").textContent =
+      `R² ${M.metrics.r2}, MAE ${M.metrics.mae}, RMSE ${M.metrics.rmse} (target in $100k)`;
+    document.getElementById("about").style.display = "block";
+    predict();
+  })
+  .catch(() => {
+    document.getElementById("sliders").innerHTML =
+      '<div class="loading">Could not load model.json — serve this folder over http(s).</div>';
+  });
+</script>
+</body>
+</html>

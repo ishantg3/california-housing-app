@@ -1,0 +1,104 @@
+{
+  "feature_names": [
+    "MedInc",
+    "HouseAge",
+    "AveRooms",
+    "AveBedrms",
+    "Population",
+    "AveOccup",
+    "Latitude",
+    "Longitude"
+  ],
+  "feature_labels": {
+    "MedInc": "Median income (x $10,000)",
+    "HouseAge": "Median house age (years)",
+    "AveRooms": "Average rooms per house",
+    "AveBedrms": "Average bedrooms per house",
+    "Population": "Area population",
+    "AveOccup": "Average occupancy",
+    "Latitude": "Latitude",
+    "Longitude": "Longitude"
+  },
+  "scaler_mean": [
+    3.88075425750969,
+    28.60828488372093,
+    5.43523502048753,
+    1.096684748789538,
+    1426.453003875969,
+    3.096961194668752,
+    35.6431492248062,
+    -119.58229045542636
+  ],
+  "scaler_scale": [
+    1.9042362577470788,
+    12.6021177300953,
+    2.387302579723395,
+    0.4332014262644865,
+    1137.0219480466567,
+    11.578393509846865,
+    2.136600595041562,
+    2.005592806566658
+  ],
+  "coef": [
+    0.854326786747203,
+    0.12262397117578695,
+    -0.29421035800999096,
+    0.3390079357063818,
+    -0.0022822059559157197,
+    -0.040833015809366775,
+    -0.896167585321016,
+    -0.8690707430379228
+  ],
+  "intercept": 2.0719469373788777,
+  "target_unit": 100000,
+  "target_name": "Median house value (USD)",
+  "metrics": {
+    "r2": 0.5758,
+    "mae": 0.5332,
+    "rmse": 0.7456
+  },
+  "ranges": {
+    "MedInc": [
+      1.066898,
+      10.576901999999988
+    ],
+    "HouseAge": [
+      4.0,
+      52.0
+    ],
+    "AveRooms": [
+      2.5781951039323014,
+      10.318432008650973
+    ],
+    "AveBedrms": [
+      0.8711612903225807,
+      2.1165364366860593
+    ],
+    "Population": [
+      88.11000000000001,
+      5798.719999999972
+    ],
+    "AveOccup": [
+      1.5388377432198934,
+      5.4101572433083716
+    ],
+    "Latitude": [
+      32.68,
+      40.64889999999999
+    ],
+    "Longitude": [
+      -123.2389,
+      -116.31
+    ]
+  },
+  "defaults": {
+    "MedInc": 3.5458,
+    "HouseAge": 29.0,
+    "AveRooms": 5.235873651414888,
+    "AveBedrms": 1.049285568483364,
+    "Population": 1167.0,
+    "AveOccup": 2.8172397135276888,
+    "Latitude": 34.26,
+    "Longitude": -118.51
+  }
+}
